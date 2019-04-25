@@ -243,7 +243,7 @@ def unet_model(pretrained_weights = None,input_shape = (768, 1024,3)):
 
     return model
 # unet = unet_model()
-unet = unet_model(pretrained_weights = "/home/korolaab/Documents/bacteria/save/unet_weights-200-0.5580.hdf5")
+unet = unet_model(pretrained_weights = "unet_weights.hdf5")
 print("Saving model to JSON")
 json_file = open("unet_model.json", "w") ### exporting bc to json
 json_string = unet.to_json()
