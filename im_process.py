@@ -71,7 +71,8 @@ def process_photo(file):
     return [red,green]
 
 
-
+def save_csv(data):
+    np.savetxt(args.file_name, data, delimiter=",",header="quantity,length",fmt='%d,%.2f')
 def main(file):
     im = Image.open(file)
     img = np.asarray(im.convert("RGB"))
@@ -85,7 +86,11 @@ def main(file):
     y=finderCV(x[0,:,:,0],img)
     print(len(y))
     if(args.length):
-        show_plot(distribiution_length(y))
+        dist = distribiution_length(y)
+        show_plot(dist)
+    if(args.file_name):
+        print("save data to {}".format(args.file_name))
+        save_csv(dist)
 
 
 def draw_rect():
@@ -138,7 +143,7 @@ def show_plot(N_L):
     PLT.plot(N_L[:,1],N_L[:,0],"r")
     PLT.ylabel('Number')
     PLT.xlabel('Length')
-    PLT.show()
+
 
 
 
@@ -153,6 +158,8 @@ if __name__ == '__main__':
     parser.add_argument("--weights",action = "store", metavar='<path>', dest = "w", help="Weights")
     parser.add_argument("--Debug ",dest='Debug', action="store_true", help="Debuging information and models parameters")
     parser.add_argument("--dist_length",dest="length",action="store_true",help="Show the length distribution of the number of bacteria")
+    parser.add_argument("--save_csv",dest="file_name",action="store",metavar="<path>",default="None",help="Save data to csv file")
+    # parser.add_argument()
     #to csv
     args = parser.parse_args()
     # m = args.model
