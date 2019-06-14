@@ -24,6 +24,7 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
 def finderCV(mask,img):
             global n
             mask = np.where(mask > 0.99, 1, 0)
@@ -39,7 +40,7 @@ def finderCV(mask,img):
 
             PLT.imshow(img)
 
-            return len(arr)
+            return arr
 
 def count_bacteria(img):
     im = np.expand_dims(img,axis=0)
@@ -48,7 +49,7 @@ def count_bacteria(img):
     return N
 
 def load_model(weights=None):
-    json_file = open("model.json", "r")    ###loading from json file the model
+    json_file = open("models/unet_model.json", "r")    ###loading from json file the model
     model_json = json_file.read()
     model = model_from_json(model_json)
     if(D):
@@ -82,7 +83,66 @@ def main(file):
     PLT.colorbar()
     imgplot.set_cmap('nipy_spectral')
     y=finderCV(x[0,:,:,0],img)
-    print(y)
+    print(len(y))
+    if(args.length):
+        show_plot(distribiution_length(y))
+
+
+def draw_rect():
+
+        rect = patches.Rectangle((x,y),w,h,linewidth=1,edgecolor=color,facecolor='none')
+        # PLT.pause(0.001)
+        # Add the patch to the Axes
+        ax.add_patch(rect)
+
+def distribiution_length(y): # the length distribution of the number of bacteria
+    L=[]
+    for i in y:
+        x,y,w,h = i
+
+        L.append((w**2+h**2)**0.5)
+
+    L = np.array(L)
+    L = np.sort(L)
+    k = 0
+    l=L[k]
+
+    # print(L)
+    if len(L)>0:
+        l_k = L[0]
+    else:
+        PLT.show()
+        exit()
+    l = l_k
+    N_L =[]
+    E = 2
+    print("Total number: %d"%len(L))
+    while (k < len(L)-1):
+        n = 0
+        l = L[k]
+        while(l_k<l+E and k < len(L)-1):
+            n = n +1
+            l_k = L[k]
+            k = k+1
+        N_L.append((n,l))
+
+    N_L = np.array(N_L)
+    print(N_L)
+    return N_L
+
+def show_plot(N_L):
+    # print(N_L.shape)
+    # stop = timeit.default_timer()
+    # print('Time: ', stop - start)
+    graph = PLT.figure(3)
+    PLT.plot(N_L[:,1],N_L[:,0],"r")
+    PLT.ylabel('Number')
+    PLT.xlabel('Length')
+    PLT.show()
+
+
+
+
 
 
 
@@ -91,7 +151,8 @@ if __name__ == '__main__':
     parser.add_argument("--image",action = "store", metavar='<path>',default = None, required=True ,dest = "img", help="Image")
     # parser.add_argument("--model",dest='model',default = "cnn", choices=["cnn","unet"], help="Models")
     parser.add_argument("--weights",action = "store", metavar='<path>', dest = "w", help="Weights")
-    parser.add_argument("-d", "--Debug ",dest='Debug', action="store_true", help="Debuging information and models parameters")
+    parser.add_argument("--Debug ",dest='Debug', action="store_true", help="Debuging information and models parameters")
+    parser.add_argument("--dist_length",dest="length",action="store_true",help="Show the length distribution of the number of bacteria")
     #to csv
     args = parser.parse_args()
     # m = args.model
