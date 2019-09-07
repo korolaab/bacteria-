@@ -61,64 +61,48 @@ def d_c(y_true, y_pred):
 
     intersection = 2 * K.sum(y_true_f * y_pred_f, axis=1)
     union = K.sum(y_true_f * y_true_f, axis=1) + K.sum(y_pred_f * y_pred_f, axis=1)
-    return K.mean(intersection / union)
+    # return K.mean(intersection / union)
 
-# def iou_loss(true,pred):  #this can be used as a loss if you make it negative
-#     true.set_shape(pred.get_shape())
-#     intersection = true * pred
-#     notTrue = 1 - true
-#     union = true + (notTrue * pred)
+
 
     return (K.sum(intersection, axis=-1) + K.epsilon()) / (K.sum(union, axis=-1) + K.epsilon())
 def dice_coef_loss(y_true, y_pred):
         # return -1*K.log(d_c(y_true, y_pred))
         return 1 - d_c(y_true,y_pred)
 def val_load(dataset_folder):
-    photos = []
-    answ = []
     folders = os.listdir(dataset_folder)
-    x = 0
-    quantity = []
-    for folder in folders:
-            mask=[]
-            # folder = is i
-            files = os.listdir(dataset_folder + '/' + folder)
-            mask=[]
-            for i in files:
-                if(i[-9:]=="_mask.jpg"):
-                    im = (Image.open(dataset_folder + '/' + folder + '/' +i)).convert("L")
-                    m = np.asarray(im,dtype=np.float32)
-                    mask = m/255
-                    mask = np.array(mask)
-                    mask[mask > 0] = 1
-                    answ.append(mask)
-                elif(i[-4:]== ".jpg"):
-
-                    im = (Image.open(dataset_folder + '/' + folder + '/' +i)).convert("RGB")
-                    photo = np.asarray(im,dtype=np.float32)/255
-                    photos.append(photo)
-                # else:
-                #     f = open(dataset_folder + '/' + folder + '/'+"q.txt","r")
-                #     quantity.append(int(f.read()))
-                #     f.close()
+    n = 0
+    files_masks = os.listdir(dataset_folder+"/masks")
+    # files_images=os.listdir(dataset_folder+"/images")
+    photo_array=[]
+    mask_array = []
+    for i in range(1,len(files_masks)):
 
 
-    photos = np.array(photos)
-    answ = np.array(answ)
-    # quantity = np.expand_dims(quantity,axis=1)
-    # quantity = np.array(quantity,dtype="float32")
-    return photos,answ
+        im = (Image.open(dataset_folder+'/masks/{}.jpg'.format(i))).convert("L")
+        m = np.asarray(im,dtype=np.float32)
+        mask = m/255
+        mask = np.array(mask)
+        mask = np.around(mask)
+        mask_array.append(mask)
+
+        im = (Image.open(dataset_folder + '/images/{}.jpg'.format(i))).convert("RGB")
+        photo = np.array(im,dtype = np.float32)
+        photo_array.append(photo)
+
+    photo_array = np.array(photo_array)
+    mask_array = np.array(mask_array)
+    return photo_array,mask_array
 
 def gen(dataset_folder,batch_size):
     folders = os.listdir(dataset_folder)
     n = 0
     while True:
         mask=[]
-
-        folder = random.choice(folders)
         # folder = folders[n]
-        files = os.listdir(dataset_folder + '/' + folder)
-        # n=1
+        files_masks = os.listdir(dataset_folder+"/masks")
+        files_images=os.listdir(dataset_folder+"/images")
+        num = random.randint(1, len(files_masks))
         v_f = bool(random.getrandbits(1))
         g_f = bool(random.getrandbits(1))
         bri = random.uniform(0.5, 1.2)
@@ -129,63 +113,43 @@ def gen(dataset_folder,batch_size):
         # noise = random.randint(1, 60)
         negative = bool(random.getrandbits(1))
         r = random.uniform(-40,40)
-        files = sorted(files)
+        # files = sorted(files)
         # print(files)
-        for i in files:
-            # print(i[:-9])
-            if(i[-9:]=="_mask.jpg"):
-                im = (Image.open(dataset_folder + '/' + folder + '/' +i)).convert("L")
-                m = np.asarray(im,dtype=np.float32)
-                if(v_f):
-                     m = m[::-1, :]
-                if(g_f):
-                     m = m[:, ::-1]
-                m = rotate(m,r,reshape=False)
-                # m = m255
-                mask = m/255
-                mask = np.array(mask)
-                mask = np.expand_dims(mask,axis=0)
-                mask = np.around(mask)
-            elif(i[-4:]==".jpg"):
-                im = (Image.open(dataset_folder + '/' + folder + '/' +i)).convert("RGB")
-                im = PIL.ImageEnhance.Brightness(im).enhance(bri)
-                im = PIL.ImageEnhance.Contrast(im).enhance(con)
-                # im = PIL.ImageEnhance.Color(im).enhance(col)
-                # img = np.abs(255-img)
-                # im = PIL.ImageEnhance.Sharpness(im).enhance(blur)
 
-                photo = np.asarray(im,dtype="int32")
-                # photo = np.array(im,dtype = "int32")
-                if(v_f):
-                     photo = photo[::-1, :]
-                if(g_f):
-                     photo = photo[:, ::-1]
-                # photo = ndimage.uniform_filter(photo, size=(blur, blur, 1))
-                # # photo = np.array(photo,dtype = "float32")
-                # photo = np.random.normal(2*photo+2,noise)
-                photo = rotate(photo,r,reshape=False)
-                # if(negative):
-                    # photo = np.abs(255-photo)
-                photo = np.array(photo,dtype = np.float32)
+        im = (Image.open(dataset_folder+'/masks/{}.jpg'.format(num))).convert("L")
+        m = np.asarray(im,dtype=np.float32)
+        if(v_f):
+             m = m[::-1, :]
+        if(g_f):
+             m = m[:, ::-1]
+        m = rotate(m,r,reshape=False)
 
-                photo = np.expand_dims(photo,axis=0)
-            #
-            # else:
-                # f = open(dataset_folder + '/' + folder + '/'+"q.txt","r")
-                # quantity=float32(f.read())
+        mask = m/255
+        mask = np.array(mask)
+        mask = np.expand_dims(mask,axis=0)
+        mask = np.around(mask)
 
-                # f.close
+        im = (Image.open(dataset_folder + '/masks/{}.jpg'.format(num))).convert("RGB")
+        im = PIL.ImageEnhance.Brightness(im).enhance(bri)
+        im = PIL.ImageEnhance.Contrast(im).enhance(con)
+        # im = PIL.ImageEnhance.Color(im).enhance(col)
+        # img = np.abs(255-img)
+        # im = PIL.ImageEnhance.Sharpness(im).enhance(blur)
 
+        photo = np.asarray(im,dtype="int32")
 
-        # print(photo.shape)
-        # print(mask.shape)
-        # quantity = np.array(quantity,dtype="float32")
-        # quantity = np.expand_dims(quantity,axis=1)
-        # y = {
-        #         "dice": mask,
-        #         "count": quantity
-        # }
+        if(v_f):
+             photo = photo[::-1, :]
+        if(g_f):
+             photo = photo[:, ::-1]
+
+        photo = rotate(photo,r,reshape=False)
+        photo = np.array(photo,dtype = np.float32)
+        photo = np.expand_dims(photo,axis=0)
+
         yield photo,mask
+
+
 
 def quantity_loss(true,pred):
     # return tf.math.reduce_mean(pred,axis=0)
@@ -276,9 +240,10 @@ def train(Weights,name_json_file,Tensor_board_logs=False):
             callbacks = [сheckpoint,his]
     else:
         callbacks=[сheckpoint]
-    x_val,y_val = val_load("val_dataset")
+    x_val,y_val = val_load("Dataset/validate")
+    print(x_val.shape)
 
-    unet.fit_generator(gen("dataset",1),
+    unet.fit_generator(gen("Dataset/train",1),
                         steps_per_epoch = 25,
                         validation_data=(x_val,y_val),
                         epochs = 10000,
