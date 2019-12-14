@@ -13,6 +13,7 @@ import PIL
 from PIL import Image
 import datetime
 import io
+import imageio
 import cv2 as cv
 import csv
 import socket
@@ -41,12 +42,11 @@ def count_bacteria(img):
     N=finderCV(x[0,:,:,0])
     return N
 
-def load_model(weights=None):
+def load_model():
     json_file = open("models/unet_model.json", "r")    ###loading from json file the model
     model_json = json_file.read()
-    global model
     model = model_from_json(model_json)
-    model.load_weights(weights)       ###loading weights from file
+    model.load_weights("models/unet_weights.hdf5")       ###loading weights from file
     return model
 def process_photo(file):
     im = Image.open(file).resize((1024,768))
@@ -61,11 +61,12 @@ def process_photo(file):
 def save_csv(data):
     np.savetxt(args.file_name, data, delimiter=",",header="quantity,length",fmt='%d,%.2f')
 def predict(im):
-    img = np.asarray(im.convert("RGB").resize((1024,768)))
+    global model
+    img = np.array(im.convert("RGB").resize((1024,768)),dtype="float32")
     im = np.expand_dims(img,axis=0)/255
     x = model.predict(im)
     x = x[0,:,:,0]
-    return x 
+    return x
 def distribiution_length(y): # the length distribution of the number of bacteria
     L=[]
     for i in y:
@@ -115,7 +116,7 @@ def recv_msg(sock):
     return  recvall(sock,msglen)
 if __name__ == "__main__":
     
-    model = load_model(weights = "models/unet_weights.hdf5")
+    model = load_model()
     print("model ready")
     sock=socket.socket()
     sock.bind(('127.0.0.1',9992))
@@ -132,17 +133,15 @@ if __name__ == "__main__":
             img_bmp=gzip.decompress(raw_img)
             im = Image.open(io.BytesIO(img_bmp))               
             #decompress image
-            y = predict(im)        
-            prediction = Image.fromarray(y,"L")
-	    #net predict
+            y = predict(im)
+            print(y)
+            #net predict
             img_buf=io.BytesIO()
-            prediction.save(img_buf,"PNG")
+            imageio.imwrite(uri=img_buf,im=y,format="BMP-FI")
             img_bmp=img_buf.getvalue()
-            with open("1.png","wb") as f:
-              f.write(img_bmp)
             comp_img=gzip.compress(img_bmp)
             len_comp_img=struct.pack(">Q",len(comp_img))
-	    #int len to bytes
+            #int len to bytes
             h=hashlib.md5(comp_img)
             check_sum = h.digest()
             len_check_sum= struct.pack(">Q",len(check_sum))
@@ -152,5 +151,5 @@ if __name__ == "__main__":
            # print(len(check_sum))
             conn.send(len_comp_img+comp_img+len_check_sum+check_sum)
 
-	#send prediction to webserver
+    #send prediction to webserver
         conn.close()
