@@ -38,6 +38,7 @@ func image_to_network(w http.ResponseWriter, r *http.Request){
 	}
     buff :=new(bytes.Buffer)
     bmp.Encode(buff,img)
+
     input := buff.Bytes()
     //encode image as bmp
     var buf_img bytes.Buffer
