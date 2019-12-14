@@ -15,7 +15,6 @@ import datetime
 import io
 import cv2 as cv
 import csv
-import imageio
 import socket
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
@@ -47,9 +46,8 @@ def load_model(weights=None):
     model_json = json_file.read()
     global model
     model = model_from_json(model_json)
-    if not(weights is None):
-     model.load_weights(weights)       ###loading weights from file
-     
+    model.load_weights(weights)       ###loading weights from file
+    return model
 def process_photo(file):
     im = Image.open(file).resize((1024,768))
     img = np.array(im.convert("RGB"))
@@ -60,17 +58,14 @@ def process_photo(file):
     green = count_bacteria(green_im)
     red = count_bacteria(red_im)
     return [red,green]
-
-
 def save_csv(data):
     np.savetxt(args.file_name, data, delimiter=",",header="quantity,length",fmt='%d,%.2f')
 def predict(im):
     img = np.asarray(im.convert("RGB").resize((1024,768)))
     im = np.expand_dims(img,axis=0)/255
     x = model.predict(im)
-    x = x[0,:,:,:]
-    x = x.reshape((768,1024))
-    return  Image.fromarray(x,mode="L")
+    x = x[0,:,:,0]
+    return x 
 def distribiution_length(y): # the length distribution of the number of bacteria
     L=[]
     for i in y:
@@ -119,10 +114,8 @@ def recv_msg(sock):
     msglen=struct.unpack(">Q",raw_msglen)[0]
     return  recvall(sock,msglen)
 if __name__ == "__main__":
-    #graph = tf.get_default_graph()
-    #sess =tf.Session()
-    #set_session(sess)
-    load_model()
+    
+    model = load_model(weights = "models/unet_weights.hdf5")
     print("model ready")
     sock=socket.socket()
     sock.bind(('127.0.0.1',9992))
@@ -130,7 +123,6 @@ if __name__ == "__main__":
     while True:
         conn,client_address=sock.accept()
         raw_img=recv_msg(conn)
-        print(len(raw_img))
         conn.send(b"")
         check_sum=recv_msg(conn)
         #get bytes data from webserver
@@ -139,12 +131,15 @@ if __name__ == "__main__":
         if(check_sum == h.digest()): 
             img_bmp=gzip.decompress(raw_img)
             im = Image.open(io.BytesIO(img_bmp))               
-            #convert from base64 to pillow object
-            prediction = predict(im)        
-            #net predict
+            #decompress image
+            y = predict(im)        
+            prediction = Image.fromarray(y,"L")
+	    #net predict
             img_buf=io.BytesIO()
-            prediction.save(img_buf,"BMP")
+            prediction.save(img_buf,"PNG")
             img_bmp=img_buf.getvalue()
+            with open("1.png","wb") as f:
+              f.write(img_bmp)
             comp_img=gzip.compress(img_bmp)
             len_comp_img=struct.pack(">Q",len(comp_img))
 	    #int len to bytes

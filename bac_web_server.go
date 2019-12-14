@@ -65,27 +65,29 @@ func image_to_network(w http.ResponseWriter, r *http.Request){
     //receive segmentation_map
     integer:=make([]byte,8)
     _,err=io.ReadFull(conn,integer)
-    if err != nil{fmt.Fprintf(w,"recverr1");return}
+    if err != nil{fmt.Fprintf(w,"recverr1:%d",8);return}
     comp_pred_len:=binary.BigEndian.Uint64(integer)
     comp_pred:=make([]byte,comp_pred_len)
     _,err=io.ReadFull(conn,comp_pred)
     if err != nil{fmt.Fprintf(w,"recverr2:%d",comp_pred_len);return}
     _,err=io.ReadFull(conn,integer)
-    if err != nil{fmt.Fprintf(w,"recverr3");return}
+    if err != nil{fmt.Fprintf(w,"recverr3:%d",8);return}
     check_sum_len := binary.BigEndian.Uint64(integer)
     pred_sum:=make([]byte,check_sum_len)
     _,err=io.ReadFull(conn,pred_sum)
-    if err != nil{fmt.Fprintf(w,"recverr4");return}
-    check_sum = md5.Sum(comp_pred) 
+    if err != nil{fmt.Fprintf(w,"recverr4:%d",check_sum_len);return}
+    check_sum = md5.Sum(comp_pred)
     if(string(pred_sum) == string(check_sum[:])){
-	zr,err:=gzip.NewReader(&buf_img)
+	r:=bytes.NewReader(comp_pred)
+	zr,err:=gzip.NewReader(r)
+	var resB bytes.Buffer
 	if err!=nil{
 	    w.Write([]byte("Error"))
 	    }
-	_,err=zr.Read(comp_pred)
-	seg_map:=buf_img.Bytes()
+	_,err=resB.ReadFrom(zr)
 	zr.Close()
-	w.Write(seg_map)
+	seg_map:=resB.Bytes()
+	fmt.Fprintf(w,"%s",seg_map)
 	return
     }else{
 	w.Write([]byte("archive is corrupted"))
