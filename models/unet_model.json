@@ -1932,7 +1932,7 @@
           "bias_regularizer": null,
           "activity_regularizer": null,
           "data_format": "channels_last",
-          "activation": "linear",
+          "activation": "sigmoid",
           "kernel_size": [
             1,
             1
