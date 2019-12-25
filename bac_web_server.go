@@ -37,10 +37,10 @@ func image_to_network(w http.ResponseWriter, r *http.Request){
 	return
 	}
     buff :=new(bytes.Buffer)
-    bmp.Encode(buff,img)
+    png.Encode(buff,img)
 
     input := buff.Bytes()
-    //encode image as bmp
+    //encode image as png
     var buf_img bytes.Buffer
     zw:=gzip.NewWriter(&buf_img)
     _,err=zw.Write(input)
