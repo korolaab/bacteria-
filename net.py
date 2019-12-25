@@ -18,7 +18,7 @@ import cv2
 import csv
 import socket
 import keras.backend as K
-dtype = "float16"
+dtype = "float32"
 K.set_floatx(dtype)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
@@ -42,8 +42,8 @@ def crop_from_photo(image,size,shift,mode):
      return pieces
 
 def photo_from_crop(arr,shift,x_size,y_size):
-    arr = (arr*100).astype(np.int16)
-    image = np.zeros([x_size,y_size],dtype=np.int16)
+    arr = (arr*100).astype(np.int32)
+    image = np.zeros([x_size,y_size],dtype=np.int32)
     n = 0
     size = arr.shape[1]
 
