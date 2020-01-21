@@ -1,9 +1,8 @@
-# BacteriaNet
-Segmentation bacterias with neural network based on U-Net architecture.
-
+# Bacteria segmentation net.
+Cloud segmentation of bacteria on the microscope images with neural network based on U-Net
+architecture. In this case the E.coli M-17 was used. A cloud server can get the image file and
+return the segmentation map using a POST request.
 ## EXAMPLES
-![example of Segmentation](https://sun9-42.userapi.com/c853420/v853420497/e12d7/kinPHEu6l_s.jpg)
+![example of Segmentation](https://sun9-16.userapi.com/c200720/v200720250/443f6/W4-xMEgiiPs.jpg)
 
-![example of Segmentation #2](https://sun9-59.userapi.com/c852320/v852320497/1c0fb8/aeOVVAb36GU.jpg)
-## Dataset
-[GoogleDrive](https://drive.google.com/open?id=1y_QXKpzVrVlQrQihZi6oTjJbAPD6cmRz)
+
