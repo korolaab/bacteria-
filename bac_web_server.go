@@ -9,6 +9,7 @@ import (
 	"image/jpeg"
 	"net"
 	"io"
+    "io/ioutil"
 	"net/http"
 	"net/http/fcgi"
 	"crypto/md5"
@@ -102,6 +103,14 @@ func main(){
     if e != nil{
     panic(e)
     }
-    http.HandleFunc("/",image_to_network)
+    h1 := func(w http.ResponseWriter, _ *http.Request){
+        b,err := ioutil.ReadFile("web/index.html")
+        if err != nil{
+            return
+            }
+        fmt.Fprintf(w,string(b))
+        }
+    http.HandleFunc("/bacteria/net",image_to_network)
+    http.HandleFunc("/bacteria",h1)
     fcgi.Serve(listener,nil)
 }
