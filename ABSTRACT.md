@@ -15,5 +15,5 @@ sh decompress_abstract.sh [key file]
 ```
 To encrypt
 ```
-sh compress_abstract.sh
+sh compress_abstract.sh [key file]
 ```
