@@ -1,0 +1,5 @@
+server{
+    location /bacteria/{
+         fastcgi_pass localhost:9991;
+     }         
+}
